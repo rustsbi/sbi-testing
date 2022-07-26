@@ -1,10 +1,4 @@
-﻿use riscv::{
-    asm::wfi,
-    register::{
-        scause::{Interrupt, Trap},
-        sie, sstatus, time,
-    },
-};
+﻿use riscv::register::scause::Trap;
 
 pub enum Case {
     Interval { begin: u64, end: u64 },
@@ -18,6 +12,9 @@ pub enum Fatel {
 }
 
 pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
+    use crate::trap::wait_interrupt;
+    use riscv::register::{scause::Interrupt, sie, sstatus, time};
+
     if sbi::probe_extension(sbi::EID_TIME) == 0 {
         Err(Fatel::NotExist)?;
     }
@@ -31,20 +28,13 @@ pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     }
 
     sbi::set_timer(time::read64() + frequency);
-    match unsafe { wait_interrupt() } {
+    let trap = unsafe {
+        sie::set_stimer();
+        sstatus::set_sie();
+        wait_interrupt()
+    };
+    match trap {
         Trap::Interrupt(Interrupt::SupervisorTimer) => Ok(f(Case::SetTimer)),
         trap => Err(Fatel::UnexpectedTrap(trap)),
-    }
-}
-
-unsafe fn wait_interrupt() -> Trap {
-    crate::trap::set_stvec();
-    sie::set_stimer();
-    sstatus::set_sie();
-    loop {
-        if let Some(cause) = crate::trap::last_trap() {
-            return cause;
-        }
-        wfi();
     }
 }

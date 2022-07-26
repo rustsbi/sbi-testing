@@ -10,10 +10,13 @@ mod trap;
 pub mod base;
 // §6
 pub mod time;
+// §7
+pub mod spi;
 
 pub enum Extension {
     Base,
     Time,
+    Spi,
 }
 
 pub enum Case {
@@ -23,9 +26,12 @@ pub enum Case {
     BaseFatel(base::Fatel),
     Time(time::Case),
     TimeFatel(time::Fatel),
+    Spi(spi::Case),
+    SpiFatel(spi::Fatel),
 }
 
-pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> bool {
+pub fn test(hartid: usize, frequency: u64, f: impl Fn(Case) -> bool) -> bool {
+    // base =====================================================
     if !f(Case::Begin(Extension::Base)) {
         return false;
     }
@@ -41,7 +47,7 @@ pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> bool {
     if !f(Case::End(Extension::Base)) {
         return false;
     }
-
+    // time =====================================================
     if !f(Case::Begin(Extension::Time)) {
         return false;
     }
@@ -57,5 +63,22 @@ pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> bool {
     if !f(Case::End(Extension::Time)) {
         return false;
     }
+    // spi ======================================================
+    if !f(Case::Begin(Extension::Spi)) {
+        return false;
+    }
+    match spi::test(hartid, |case| f(Case::Spi(case))) {
+        Ok(true) => {}
+        Ok(false) => return false,
+        Err(fatel) => {
+            if !f(Case::SpiFatel(fatel)) {
+                return false;
+            }
+        }
+    }
+    if !f(Case::End(Extension::Spi)) {
+        return false;
+    }
+    // finish ====================================================
     true
 }
