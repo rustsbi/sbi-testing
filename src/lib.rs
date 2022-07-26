@@ -4,6 +4,8 @@
 
 pub extern crate sbi_rt as sbi;
 
+mod trap;
+
 // §4
 pub mod base;
 // §6
