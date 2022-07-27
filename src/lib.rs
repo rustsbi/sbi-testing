@@ -30,7 +30,7 @@ pub enum Case {
     SpiFatel(spi::Fatel),
 }
 
-pub fn test(hartid: usize, frequency: u64, f: impl Fn(Case) -> bool) -> bool {
+pub fn test(hartid: usize, delay: u64, f: impl Fn(Case) -> bool) -> bool {
     // base =====================================================
     if !f(Case::Begin(Extension::Base)) {
         return false;
@@ -51,7 +51,7 @@ pub fn test(hartid: usize, frequency: u64, f: impl Fn(Case) -> bool) -> bool {
     if !f(Case::Begin(Extension::Time)) {
         return false;
     }
-    match time::test(frequency, |case| f(Case::Time(case))) {
+    match time::test(delay, |case| f(Case::Time(case))) {
         Ok(true) => {}
         Ok(false) => return false,
         Err(fatel) => {

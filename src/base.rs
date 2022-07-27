@@ -49,7 +49,7 @@ pub struct NotExist;
 pub type Fatel = NotExist;
 
 pub fn test(f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
-    if sbi::probe_extension(sbi::EID_BASE) {
+    if !sbi::probe_extension(sbi::EID_BASE) {
         Err(NotExist)?;
     }
     let pass = f(Case::GetSbiSpecVersion(sbi::get_spec_version()))

@@ -11,11 +11,11 @@ pub enum Fatel {
     UnexpectedTrap(Trap),
 }
 
-pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
+pub fn test(delay: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     use crate::trap::wait_interrupt;
     use riscv::register::{scause::Interrupt, sie, sstatus, time};
 
-    if sbi::probe_extension(sbi::EID_TIME) {
+    if !sbi::probe_extension(sbi::EID_TIME) {
         Err(Fatel::NotExist)?;
     }
     let begin = time::read64();
@@ -27,7 +27,7 @@ pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
         return Ok(false);
     }
 
-    sbi::set_timer(time::read64() + frequency);
+    sbi::set_timer(time::read64() + delay);
     let trap = unsafe {
         sie::set_stimer();
         sstatus::set_sie();
