@@ -8,7 +8,7 @@ pub enum Fatel {
     UnexpectedTrap(Trap),
 }
 
-pub fn test(hartid: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
+pub fn test(hart_id: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     use crate::trap::wait_interrupt;
     use riscv::register::{scause::Interrupt, sie, sstatus};
 
@@ -19,7 +19,7 @@ pub fn test(hartid: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     let trap = unsafe {
         sie::set_ssoft();
         sstatus::set_sie();
-        sbi::send_ipi(1 << hartid, 0);
+        sbi::send_ipi(1 << hart_id, 0);
         wait_interrupt()
     };
     match trap {
