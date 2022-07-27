@@ -12,7 +12,7 @@ pub fn test(hartid: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     use crate::trap::wait_interrupt;
     use riscv::register::{scause::Interrupt, sie, sstatus};
 
-    if sbi::probe_extension(sbi::EID_TIME) == 0 {
+    if sbi::probe_extension(sbi::EID_TIME) {
         Err(Fatel::NotExist)?;
     }
 

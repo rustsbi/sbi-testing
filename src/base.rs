@@ -1,5 +1,7 @@
-﻿pub enum Case {
-    GetSbiSpecVersion(usize),
+﻿use sbi_rt::SbiSpecVersion;
+
+pub enum Case {
+    GetSbiSpecVersion(SbiSpecVersion),
     GetSbiImplId(Result<&'static str, usize>),
     GetSbiImplVersion(usize),
     ProbeExtensions(Extensions),
@@ -47,28 +49,28 @@ pub struct NotExist;
 pub type Fatel = NotExist;
 
 pub fn test(f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
-    if sbi::probe_extension(sbi::EID_BASE) == 0 {
+    if sbi::probe_extension(sbi::EID_BASE) {
         Err(NotExist)?;
     }
     let pass = f(Case::GetSbiSpecVersion(sbi::get_spec_version()))
         && f(Case::GetSbiImplId(match sbi::get_sbi_impl_id() {
-            sbi::impl_id::IMPL_BBL => Ok("BBL"),
-            sbi::impl_id::IMPL_OPEN_SBI => Ok("OpenSBI"),
-            sbi::impl_id::IMPL_XVISOR => Ok("Xvisor"),
-            sbi::impl_id::IMPL_KVM => Ok("KVM"),
-            sbi::impl_id::IMPL_RUST_SBI => Ok("RustSBI"),
-            sbi::impl_id::IMPL_DIOSIX => Ok("Diosix"),
-            sbi::impl_id::IMPL_COFFER => Ok("Coffer"),
+            sbi::impl_id::BBL => Ok("BBL"),
+            sbi::impl_id::OPEN_SBI => Ok("OpenSBI"),
+            sbi::impl_id::XVISOR => Ok("Xvisor"),
+            sbi::impl_id::KVM => Ok("KVM"),
+            sbi::impl_id::RUST_SBI => Ok("RustSBI"),
+            sbi::impl_id::DIOSIX => Ok("Diosix"),
+            sbi::impl_id::COFFER => Ok("Coffer"),
             unknown => Err(unknown),
         }))
         && f(Case::GetSbiImplVersion(sbi::get_sbi_impl_version()))
         && f(Case::ProbeExtensions(Extensions {
-            time: sbi::probe_extension(sbi::EID_TIME) != 0,
-            spi: sbi::probe_extension(sbi::EID_SPI) != 0,
-            rfnc: sbi::probe_extension(sbi::EID_RFNC) != 0,
-            hsm: sbi::probe_extension(sbi::EID_HSM) != 0,
-            srst: sbi::probe_extension(sbi::EID_SRST) != 0,
-            pmu: sbi::probe_extension(sbi::EID_PMU) != 0,
+            time: sbi::probe_extension(sbi::EID_TIME),
+            spi: sbi::probe_extension(sbi::EID_SPI),
+            rfnc: sbi::probe_extension(sbi::EID_RFNC),
+            hsm: sbi::probe_extension(sbi::EID_HSM),
+            srst: sbi::probe_extension(sbi::EID_SRST),
+            pmu: sbi::probe_extension(sbi::EID_PMU),
         }))
         && f(Case::GetMVendorId(sbi::get_mvendorid()))
         && f(Case::GetMArchId(sbi::get_marchid()))

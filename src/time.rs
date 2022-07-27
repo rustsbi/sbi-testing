@@ -15,7 +15,7 @@ pub fn test(frequency: u64, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
     use crate::trap::wait_interrupt;
     use riscv::register::{scause::Interrupt, sie, sstatus, time};
 
-    if sbi::probe_extension(sbi::EID_TIME) == 0 {
+    if sbi::probe_extension(sbi::EID_TIME) {
         Err(Fatel::NotExist)?;
     }
     let begin = time::read64();
