@@ -10,6 +10,6 @@ Characters implementation of SBI 1.0.0 specification:
 - [x] §6  TIME
 - [x] §7  sPI
 - [ ] §8  RFNC
-- [ ] §9  HSM
+- [x] §9  HSM
 - [ ] §10 SRST
 - [ ] §11 PMU
