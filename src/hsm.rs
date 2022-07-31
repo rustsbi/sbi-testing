@@ -2,25 +2,21 @@
 use sbi::SbiRet;
 
 pub enum Case {
-    HartStarted(usize),
-}
-
-pub enum Fatel {
     NotExist,
+    Begin,
     NoSecondaryHart,
+    HartStarted(usize),
     HartStartFailed { hartid: usize, ret: SbiRet },
+    Pass,
 }
 
-pub fn test(
-    primary_hart_id: usize,
-    mut hart_mask: usize,
-    hart_mask_base: usize,
-    f: impl Fn(Case) -> bool,
-) -> Result<bool, Fatel> {
+pub fn test(primary_hart_id: usize, mut hart_mask: usize, hart_mask_base: usize, f: impl Fn(Case)) {
     // 不支持 HSM 扩展
     if !sbi::probe_extension(sbi::EID_HSM) {
-        Err(Fatel::NotExist)?;
+        f(Case::NotExist);
+        return;
     }
+    f(Case::Begin);
     // 分批测试
     let mut batch = [0usize; TEST_BATCH_SIZE];
     let mut batch_count = 0;
@@ -39,13 +35,16 @@ pub fn test(
                             batch_count += 1;
                             batch_size = 0;
                         }
-                        Err(e) => return Err(e),
+                        Err((hartid, ret)) => {
+                            f(Case::HartStartFailed { hartid, ret });
+                            return;
+                        }
                     }
                 }
             }
             // 副核不在停止状态
-            else if !f(Case::HartStarted(hartid)) {
-                return Ok(false);
+            else {
+                f(Case::HartStarted(hartid));
             }
         }
         let distance = hart_mask.trailing_zeros() + 1;
@@ -55,17 +54,17 @@ pub fn test(
     // 为不满一批次的核执行测试
     if batch_size > 0 {
         match test_batch(&batch[..batch_size]) {
-            Ok(()) => Ok(true),
-            Err(e) => return Err(e),
+            Ok(()) => f(Case::Pass),
+            Err((hartid, ret)) => f(Case::HartStartFailed { hartid, ret }),
         }
     }
     // 所有批次通过测试
     else if batch_count > 0 {
-        Ok(true)
+        f(Case::Pass);
     }
     // 没有找到能参与测试的副核
     else {
-        Err(Fatel::NoSecondaryHart)
+        f(Case::NoSecondaryHart)
     }
 }
 
@@ -138,13 +137,13 @@ impl ItemPerHart {
 }
 
 /// 测试一批核
-fn test_batch(batch: &[usize]) -> Result<(), Fatel> {
+fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
     // 初始这些核都是停止状态，测试 start
     for (i, hartid) in batch.iter().copied().enumerate() {
         let ptr = unsafe { STACK[i].reset() };
         let ret = sbi::hart_start(hartid, test_entry as _, ptr as _);
         if ret.error != sbi::RET_SUCCESS {
-            return Err(Fatel::HartStartFailed { hartid, ret });
+            return Err((hartid, ret));
         }
     }
     // 测试不可恢复休眠

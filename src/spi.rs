@@ -1,21 +1,22 @@
-﻿use riscv::register::scause::Trap;
+﻿use crate::trap::wait_interrupt;
+use riscv::register::scause::Trap;
+use riscv::register::{scause::Interrupt, sie, sstatus};
 
-pub struct SendIpi;
-pub type Case = SendIpi;
-
-pub enum Fatel {
+pub enum Case {
     NotExist,
+    Begin,
+    SendIpi,
     UnexpectedTrap(Trap),
+    Pass,
 }
 
-pub fn test(hart_id: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
-    use crate::trap::wait_interrupt;
-    use riscv::register::{scause::Interrupt, sie, sstatus};
-
+pub fn test(hart_id: usize, f: impl Fn(Case)) {
     if !sbi::probe_extension(sbi::EID_TIME) {
-        Err(Fatel::NotExist)?;
+        f(Case::NotExist);
+        return;
     }
 
+    f(Case::Begin);
     let trap = unsafe {
         sie::set_ssoft();
         sstatus::set_sie();
@@ -23,7 +24,12 @@ pub fn test(hart_id: usize, f: impl Fn(Case) -> bool) -> Result<bool, Fatel> {
         wait_interrupt()
     };
     match trap {
-        Trap::Interrupt(Interrupt::SupervisorSoft) => Ok(f(SendIpi)),
-        trap => Err(Fatel::UnexpectedTrap(trap)),
+        Trap::Interrupt(Interrupt::SupervisorSoft) => {
+            f(Case::SendIpi);
+            f(Case::Pass);
+        }
+        trap => {
+            f(Case::UnexpectedTrap(trap));
+        }
     }
 }
