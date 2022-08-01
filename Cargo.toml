@@ -16,3 +16,7 @@ readme = "README.md"
 [dependencies]
 sbi-rt = { git = "https://github.com/rustsbi/sbi-rt.git", branch = "dev" }
 riscv = "0.8"
+log = "0.4.17"
+
+[features]
+log = []

@@ -6,6 +6,12 @@ pub extern crate sbi_rt as sbi;
 
 mod trap;
 
+#[cfg(feature = "log")]
+mod log_test;
+
+#[cfg(feature = "log")]
+pub use log_test::Testing;
+
 // §4
 pub mod base;
 // §6

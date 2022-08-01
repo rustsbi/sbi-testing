@@ -10,7 +10,7 @@ pub enum Case {
     Pass,
 }
 
-pub fn test(hart_id: usize, f: impl Fn(Case)) {
+pub fn test(hart_id: usize, mut f: impl FnMut(Case)) {
     if !sbi::probe_extension(sbi::EID_TIME) {
         f(Case::NotExist);
         return;

@@ -47,7 +47,7 @@ impl core::fmt::Display for Extensions {
     }
 }
 
-pub fn test(f: impl Fn(Case)) {
+pub fn test(mut f: impl FnMut(Case)) {
     if !sbi::probe_extension(sbi::EID_BASE) {
         f(Case::NotExist);
         return;

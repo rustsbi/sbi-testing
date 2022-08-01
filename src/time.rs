@@ -10,7 +10,7 @@ pub enum Case {
     Pass,
 }
 
-pub fn test(delay: u64, f: impl Fn(Case)) {
+pub fn test(delay: u64, mut f: impl FnMut(Case)) {
     use crate::trap::wait_interrupt;
     use riscv::register::{scause::Interrupt, sie, sstatus, time};
 
