@@ -1,12 +1,19 @@
 ﻿use core::sync::atomic::{AtomicU32, Ordering};
 use sbi::SbiRet;
 
-pub enum Case {
+pub enum Case<'a> {
     NotExist,
     Begin,
-    NoSecondaryHart,
+    HartStartedBeforeTest(usize),
+    NoStoppedHart,
+    BatchBegin(&'a [usize]),
     HartStarted(usize),
     HartStartFailed { hartid: usize, ret: SbiRet },
+    HartSuspendedNonretentive(usize),
+    HartResumed(usize),
+    HartSuspendedRetentive(usize),
+    HartStopped(usize),
+    BatchPass(&'a [usize]),
     Pass,
 }
 
@@ -18,6 +25,7 @@ pub fn test(primary_hart_id: usize, mut hart_mask: usize, hart_mask_base: usize,
     }
     f(Case::Begin);
     // 分批测试
+
     let mut batch = [0usize; TEST_BATCH_SIZE];
     let mut batch_count = 0;
     let mut batch_size = 0;
@@ -30,21 +38,17 @@ pub fn test(primary_hart_id: usize, mut hart_mask: usize, hart_mask_base: usize,
                 batch_size += 1;
                 // 收集一个批次，执行测试
                 if batch_size == TEST_BATCH_SIZE {
-                    match test_batch(&batch) {
-                        Ok(()) => {
-                            batch_count += 1;
-                            batch_size = 0;
-                        }
-                        Err((hartid, ret)) => {
-                            f(Case::HartStartFailed { hartid, ret });
-                            return;
-                        }
+                    if test_batch(&batch, &f) {
+                        batch_count += 1;
+                        batch_size = 0;
+                    } else {
+                        return;
                     }
                 }
             }
             // 副核不在停止状态
             else {
-                f(Case::HartStarted(hartid));
+                f(Case::HartStartedBeforeTest(hartid));
             }
         }
         let distance = hart_mask.trailing_zeros() + 1;
@@ -53,9 +57,8 @@ pub fn test(primary_hart_id: usize, mut hart_mask: usize, hart_mask_base: usize,
     }
     // 为不满一批次的核执行测试
     if batch_size > 0 {
-        match test_batch(&batch[..batch_size]) {
-            Ok(()) => f(Case::Pass),
-            Err((hartid, ret)) => f(Case::HartStartFailed { hartid, ret }),
+        if test_batch(&batch[..batch_size], &f) {
+            f(Case::Pass);
         }
     }
     // 所有批次通过测试
@@ -64,7 +67,7 @@ pub fn test(primary_hart_id: usize, mut hart_mask: usize, hart_mask_base: usize,
     }
     // 没有找到能参与测试的副核
     else {
-        f(Case::NoSecondaryHart)
+        f(Case::NoStoppedHart)
     }
 }
 
@@ -104,27 +107,32 @@ impl ItemPerHart {
         stack: [0; 504],
     };
 
+    #[inline]
     fn reset(&mut self) -> *const ItemPerHart {
         self.stage.store(STAGE_IDLE, Ordering::Relaxed);
         self as _
     }
 
+    #[inline]
     fn wait_start(&self) {
         while self.stage.load(Ordering::Relaxed) != STAGE_STARTED {
             core::hint::spin_loop();
         }
     }
 
+    #[inline]
     fn wait_resume(&self) {
         while self.stage.load(Ordering::Relaxed) != STAGE_RESUMED {
             core::hint::spin_loop();
         }
     }
 
+    #[inline]
     fn send_signal(&self) {
         self.signal.store(1, Ordering::Release);
     }
 
+    #[inline]
     fn wait_signal(&self) {
         while self
             .signal
@@ -137,13 +145,15 @@ impl ItemPerHart {
 }
 
 /// 测试一批核
-fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
+fn test_batch(batch: &[usize], f: impl Fn(Case)) -> bool {
+    f(Case::BatchBegin(batch));
     // 初始这些核都是停止状态，测试 start
     for (i, hartid) in batch.iter().copied().enumerate() {
         let ptr = unsafe { STACK[i].reset() };
         let ret = sbi::hart_start(hartid, test_entry as _, ptr as _);
         if ret.error != sbi::RET_SUCCESS {
-            return Err((hartid, ret));
+            f(Case::HartStartFailed { hartid, ret });
+            return false;
         }
     }
     // 测试不可恢复休眠
@@ -153,6 +163,7 @@ fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
         while sbi::hart_get_status(hartid) != STARTED {
             core::hint::spin_loop();
         }
+        f(Case::HartStarted(hartid));
         // 等待信号
         item.wait_start();
         // 发出信号
@@ -161,6 +172,7 @@ fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
         while sbi::hart_get_status(hartid) != SUSPENDED {
             core::hint::spin_loop();
         }
+        f(Case::HartSuspendedNonretentive(hartid));
     }
     // 全部唤醒
     let mut mask = 1usize;
@@ -175,6 +187,7 @@ fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
         while sbi::hart_get_status(hartid) != STARTED {
             core::hint::spin_loop();
         }
+        f(Case::HartResumed(hartid));
         // 等待信号
         item.wait_resume();
         // 发出信号
@@ -183,17 +196,17 @@ fn test_batch(batch: &[usize]) -> Result<(), (usize, SbiRet)> {
         while sbi::hart_get_status(hartid) != SUSPENDED {
             core::hint::spin_loop();
         }
+        f(Case::HartSuspendedRetentive(hartid));
         // 单独恢复
-        for _ in 0..0x1000 {
-            core::hint::spin_loop();
-        }
         sbi::send_ipi(1, hartid);
         // 等待关闭
         while sbi::hart_get_status(hartid) != STOPPED {
             core::hint::spin_loop();
         }
+        f(Case::HartStopped(hartid));
     }
-    Ok(())
+    f(Case::BatchPass(batch));
+    true
 }
 
 /// 测试用启动入口
