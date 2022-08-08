@@ -204,6 +204,8 @@ fn test_batch(batch: &[usize], mut f: impl FnMut(Case)) -> bool {
         f(Case::HartSuspendedRetentive(hartid));
         // 单独恢复
         sbi::send_ipi(1, hartid);
+        // 单独恢复
+        sbi::send_ipi(1, hartid);
         // 等待关闭
         while sbi::hart_get_status(hartid) != STOPPED {
             core::hint::spin_loop();

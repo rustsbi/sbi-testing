@@ -2,9 +2,12 @@
 #![deny(warnings)]
 #![feature(naked_functions, asm_sym, asm_const)]
 
+mod trap;
+
 pub extern crate sbi_rt as sbi;
 
-mod trap;
+#[cfg(feature = "log")]
+pub extern crate log_crate as log;
 
 #[cfg(feature = "log")]
 mod log_test;

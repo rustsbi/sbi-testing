@@ -1,5 +1,5 @@
 ﻿use crate::{base, hsm, spi, time};
-use log::*;
+use log_crate::*;
 
 pub struct Testing {
     pub hartid: usize,
