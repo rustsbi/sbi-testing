@@ -1,4 +1,5 @@
-﻿use sbi_rt::SbiSpecVersion;
+﻿use crate::thread::Thread;
+use sbi_rt::SbiSpecVersion;
 
 pub enum Case {
     NotExist,
@@ -47,7 +48,16 @@ impl core::fmt::Display for Extensions {
     }
 }
 
-pub fn test(mut f: impl FnMut(Case)) {
+pub fn test<T: FnMut(Case)>(mut f: T) {
+    let mut thread = Thread::empty();
+    *thread.a_mut(0) = (&mut f) as *mut _ as usize;
+    thread.init(test_internel::<T> as _);
+    unsafe { thread.execute() };
+    log::error!("?");
+}
+
+fn test_internel<T: FnMut(Case)>(f: &mut T) {
+    unsafe { core::arch::asm!("csrr ra, stvec") };
     if !sbi::probe_extension(sbi::EID_BASE) {
         f(Case::NotExist);
         return;

@@ -1,7 +1,8 @@
 #![no_std]
-#![deny(warnings)]
+// #![deny(warnings)]
 #![feature(naked_functions, asm_sym, asm_const)]
 
+mod thread;
 mod trap;
 
 pub extern crate sbi_rt as sbi;
