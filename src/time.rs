@@ -22,20 +22,21 @@ pub fn test(delay: u64, mut f: impl FnMut(Case)) {
     f(Case::Begin);
     let begin: u64;
     let end: u64;
-    let mut ok = usize::MAX;
+    let mut ok = 0xffusize;
     unsafe {
         core::arch::asm!(
-            "   la   {ok},    1f
-                csrw stvec,   {ok}
+            "   la   {stvec}, 1f
+                csrw stvec,   {stvec}
                 csrr {begin}, time
                 csrr {end},   time
                 mv   {ok},    zero
             .align 2
             1:
             ",
+            stvec = out(reg) _,
             begin = out(reg) begin,
             end   = out(reg) end,
-            ok    =  inlateout(reg) ok,
+            ok    = inlateout(reg) ok,
         );
     }
     if ok != 0 {

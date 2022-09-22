@@ -19,8 +19,10 @@ pub fn test(hart_id: usize, mut f: impl FnMut(Case)) {
         return;
     }
 
-    fn ipi(hart_id: usize) {
+    fn ipi(hart_id: usize) -> ! {
         sbi::send_ipi(1 << hart_id, 0);
+        // 必须立即触发中断，即使是一个指令的延迟，也会触发另一个异常
+        unsafe { core::arch::asm!("unimp", options(noreturn, nomem)) };
     }
 
     f(Case::Begin);
