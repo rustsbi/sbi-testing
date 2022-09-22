@@ -1,9 +1,11 @@
-﻿use riscv::register::scause::Trap;
+﻿use crate::thread::Thread;
+use riscv::register::scause::{self, Trap};
 
 pub enum Case {
     NotExist,
     Begin,
     Interval { begin: u64, end: u64 },
+    ReadFailed,
     TimeDecreased { a: u64, b: u64 },
     SetTimer,
     UnexpectedTrap(Trap),
@@ -11,30 +13,53 @@ pub enum Case {
 }
 
 pub fn test(delay: u64, mut f: impl FnMut(Case)) {
-    use crate::trap::wait_interrupt;
-    use riscv::register::{scause::Interrupt, sie, sstatus, time};
+    use riscv::register::{scause::Interrupt, sie, time};
 
     if !sbi::probe_extension(sbi::EID_TIME) {
         f(Case::NotExist);
         return;
     }
     f(Case::Begin);
-    let begin = time::read64();
-    let end = time::read64();
+    let begin: u64;
+    let end: u64;
+    let mut ok = usize::MAX;
+    unsafe {
+        core::arch::asm!(
+            "   la   {ok},    1f
+                csrw stvec,   {ok}
+                csrr {begin}, time
+                csrr {end},   time
+                mv   {ok},    zero
+            .align 2
+            1:
+            ",
+            begin = out(reg) begin,
+            end   = out(reg) end,
+            ok    =  inlateout(reg) ok,
+        );
+    }
+    if ok != 0 {
+        f(Case::ReadFailed);
+        return;
+    }
     if begin >= end {
         f(Case::TimeDecreased { a: begin, b: end });
         return;
     }
     f(Case::Interval { begin, end });
 
+    let mut stack = [0usize; 32];
+    let mut thread = Thread::new(riscv::asm::wfi as _);
+    *thread.sp_mut() = stack.as_mut_ptr_range().end as _;
+
     sbi::set_timer(time::read64() + delay);
-    let trap = unsafe {
+    unsafe {
         sie::set_stimer();
-        sstatus::set_sie();
-        wait_interrupt()
-    };
-    match trap {
+        thread.execute();
+    }
+    match scause::read().cause() {
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
+            sbi::set_timer(u64::MAX);
             f(Case::SetTimer);
             f(Case::Pass);
         }

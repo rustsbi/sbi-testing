@@ -1,6 +1,9 @@
-﻿use crate::trap::wait_interrupt;
-use riscv::register::scause::Trap;
-use riscv::register::{scause::Interrupt, sie, sstatus};
+﻿use crate::thread::Thread;
+use riscv::register::{
+    scause::Interrupt,
+    scause::{self, Trap},
+    sie,
+};
 
 pub enum Case {
     NotExist,
@@ -16,14 +19,20 @@ pub fn test(hart_id: usize, mut f: impl FnMut(Case)) {
         return;
     }
 
-    f(Case::Begin);
-    let trap = unsafe {
-        sie::set_ssoft();
-        sstatus::set_sie();
+    fn ipi(hart_id: usize) {
         sbi::send_ipi(1 << hart_id, 0);
-        wait_interrupt()
-    };
-    match trap {
+    }
+
+    f(Case::Begin);
+    let mut stack = [0usize; 32];
+    let mut thread = Thread::new(ipi as _);
+    *thread.sp_mut() = stack.as_mut_ptr_range().end as _;
+    *thread.a_mut(0) = hart_id;
+    unsafe {
+        sie::set_ssoft();
+        thread.execute();
+    }
+    match scause::read().cause() {
         Trap::Interrupt(Interrupt::SupervisorSoft) => {
             f(Case::SendIpi);
             f(Case::Pass);

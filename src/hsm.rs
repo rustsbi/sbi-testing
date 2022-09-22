@@ -106,6 +106,7 @@ const STAGE_STARTED: u32 = 1;
 const STAGE_RESUMED: u32 = 2;
 
 impl ItemPerHart {
+    #[allow(clippy::declare_interior_mutable_const)]
     const ZERO: Self = Self {
         stage: AtomicU32::new(STAGE_IDLE),
         signal: AtomicU32::new(0),

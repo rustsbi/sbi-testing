@@ -4,9 +4,9 @@ pub struct Thread {
     sctx: usize,
     x: [usize; 31],
     sepc: usize,
-    stack: [u8; 2048],
 }
 
+#[allow(unused)]
 impl Thread {
     /// 创建空白上下文。
     #[inline]
@@ -15,7 +15,6 @@ impl Thread {
             sctx: 0,
             x: [0; 31],
             sepc,
-            stack: [0; 2048],
         }
     }
 

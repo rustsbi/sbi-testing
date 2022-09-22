@@ -60,6 +60,10 @@ impl Testing {
                         "read time register successfuly, set timer +1s"
                     );
                 }
+                ReadFailed => {
+                    error!(target: TARGET, "csrr time failed");
+                    result = false;
+                }
                 TimeDecreased { a, b } => {
                     error!(target: TARGET, "time decreased: {a} -> {b}");
                     result = false;
