@@ -49,15 +49,14 @@ impl core::fmt::Display for Extensions {
 }
 
 pub fn test<T: FnMut(Case)>(mut f: T) {
-    let mut thread = Thread::empty();
-    *thread.a_mut(0) = (&mut f) as *mut _ as usize;
-    thread.init(test_internel::<T> as _);
+    let mut stack = [0usize; 256];
+    let mut thread = Thread::new(test_internel::<T> as _);
+    *thread.sp_mut() = stack.as_mut_ptr() as usize + core::mem::size_of::<usize>() * stack.len();
+    *thread.a_mut(0) = (&mut f) as *mut _ as _;
     unsafe { thread.execute() };
-    log::error!("?");
 }
 
 fn test_internel<T: FnMut(Case)>(f: &mut T) {
-    unsafe { core::arch::asm!("csrr ra, stvec") };
     if !sbi::probe_extension(sbi::EID_BASE) {
         f(Case::NotExist);
         return;
@@ -87,4 +86,5 @@ fn test_internel<T: FnMut(Case)>(f: &mut T) {
     f(Case::GetMArchId(sbi::get_marchid()));
     f(Case::GetMimpId(sbi::get_mimpid()));
     f(Case::Pass);
+    unsafe { core::arch::asm!("unimp") };
 }

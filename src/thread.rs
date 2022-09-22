@@ -4,26 +4,19 @@ pub struct Thread {
     sctx: usize,
     x: [usize; 31],
     sepc: usize,
-    stack: [usize; 256],
+    stack: [u8; 2048],
 }
 
 impl Thread {
     /// 创建空白上下文。
     #[inline]
-    pub const fn empty() -> Self {
+    pub const fn new(sepc: usize) -> Self {
         Self {
             sctx: 0,
             x: [0; 31],
-            sepc: 0,
-            stack: [0; 256],
+            sepc,
+            stack: [0; 2048],
         }
-    }
-
-    /// 用指定入口初始化线程。
-    #[inline]
-    pub fn init(&mut self, f: usize) {
-        self.sepc = f;
-        *self.sp_mut() = self.stack.as_ptr() as _;
     }
 
     /// 读取通用寄存器。
@@ -105,24 +98,6 @@ impl Thread {
         );
         sstatus
     }
-}
-
-#[inline]
-fn build_sstatus(supervisor: bool, interrupt: bool) -> usize {
-    let mut sstatus: usize;
-    // 只是读 sstatus，安全的
-    unsafe { core::arch::asm!("csrr {}, sstatus", out(reg) sstatus) };
-    const PREVILEGE_BIT: usize = 1 << 8;
-    const INTERRUPT_BIT: usize = 1 << 5;
-    match supervisor {
-        false => sstatus &= !PREVILEGE_BIT,
-        true => sstatus |= PREVILEGE_BIT,
-    }
-    match interrupt {
-        false => sstatus &= !INTERRUPT_BIT,
-        true => sstatus |= INTERRUPT_BIT,
-    }
-    sstatus
 }
 
 /// 线程切换核心部分。
