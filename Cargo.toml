@@ -1,6 +1,6 @@
 [package]
 name = "sbi-testing"
-version = "0.0.1"
+version = "0.0.0"
 edition = "2021"
 description = "Provides a set of test cases for supervisors to verify functions of the supervisor executation environment"
 categories = ["os", "no-std"]
@@ -14,7 +14,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sbi-rt = { git = "https://github.com/rustsbi/sbi-rt.git", branch = "dev" }
+sbi-rt = "0.0.1"
 riscv = "0.8"
 log_crate = { version = "0.4.17", package = "log", optional = true }
 
