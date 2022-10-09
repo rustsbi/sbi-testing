@@ -15,7 +15,7 @@ pub enum Case {
 pub fn test(delay: u64, mut f: impl FnMut(Case)) {
     use riscv::register::{scause::Interrupt, sie, time};
 
-    if !sbi::probe_extension(sbi::EID_TIME) {
+    if sbi::probe_extension(sbi::Timer).is_unavailable() {
         f(Case::NotExist);
         return;
     }

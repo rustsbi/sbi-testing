@@ -1,5 +1,6 @@
-﻿use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicU32, Ordering};
 use sbi::SbiRet;
+use sbi_spec::hsm::{HART_STATE_STARTED, HART_STATE_STOPPED, HART_STATE_SUSPENDED};
 
 pub enum Case<'a> {
     NotExist,
@@ -24,7 +25,7 @@ pub fn test(
     mut f: impl FnMut(Case),
 ) {
     // 不支持 HSM 扩展
-    if !sbi::probe_extension(sbi::EID_HSM) {
+    if sbi::probe_extension(sbi::Hsm).is_unavailable() {
         f(Case::NotExist);
         return;
     }
@@ -76,20 +77,9 @@ pub fn test(
     }
 }
 
-const STARTED: SbiRet = SbiRet {
-    error: sbi::RET_SUCCESS,
-    value: sbi::HART_STATE_STARTED,
-};
-
-const STOPPED: SbiRet = SbiRet {
-    error: sbi::RET_SUCCESS,
-    value: sbi::HART_STATE_STOPPED,
-};
-
-const SUSPENDED: SbiRet = SbiRet {
-    error: sbi::RET_SUCCESS,
-    value: sbi::HART_STATE_SUSPENDED,
-};
+const STARTED: SbiRet = SbiRet::success(HART_STATE_STARTED);
+const STOPPED: SbiRet = SbiRet::success(HART_STATE_STOPPED);
+const SUSPENDED: SbiRet = SbiRet::success(HART_STATE_SUSPENDED);
 
 const TEST_BATCH_SIZE: usize = 4;
 static mut STACK: [ItemPerHart; TEST_BATCH_SIZE] = [ItemPerHart::ZERO; TEST_BATCH_SIZE];
@@ -157,7 +147,7 @@ fn test_batch(batch: &[usize], mut f: impl FnMut(Case)) -> bool {
     for (i, hartid) in batch.iter().copied().enumerate() {
         let ptr = unsafe { STACK[i].reset() };
         let ret = sbi::hart_start(hartid, test_entry as _, ptr as _);
-        if ret.error != sbi::RET_SUCCESS {
+        if ret.is_err() {
             f(Case::HartStartFailed { hartid, ret });
             return false;
         }
@@ -244,21 +234,13 @@ extern "C" fn rust_main(hart_id: usize, opaque: *mut ItemPerHart) -> ! {
     ) {
         Ok(_) => {
             item.wait_signal();
-            let ret = sbi::hart_suspend(
-                sbi::HART_SUSPEND_TYPE_NON_RETENTIVE,
-                test_entry as _,
-                opaque as _,
-            );
+            let ret = sbi::hart_suspend(sbi::NonRetentive, test_entry as _, opaque as _);
             unreachable!("suspend [{hart_id}] but {ret:?}")
         }
         Err(STAGE_STARTED) => {
             item.stage.store(STAGE_RESUMED, Ordering::Release);
             item.wait_signal();
-            let _ = sbi::hart_suspend(
-                sbi::HART_SUSPEND_TYPE_RETENTIVE,
-                test_entry as _,
-                opaque as _,
-            );
+            let _ = sbi::hart_suspend(sbi::Retentive, test_entry as _, opaque as _);
             let ret = sbi::hart_stop();
             unreachable!("suspend [{hart_id}] but {ret:?}")
         }

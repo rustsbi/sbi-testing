@@ -14,7 +14,7 @@ pub enum Case {
 }
 
 pub fn test(hart_id: usize, mut f: impl FnMut(Case)) {
-    if !sbi::probe_extension(sbi::EID_TIME) {
+    if sbi::probe_extension(sbi::Timer).is_unavailable() {
         f(Case::NotExist);
         return;
     }
