@@ -2,7 +2,7 @@
 name = "sbi-testing"
 version = "0.0.0"
 edition = "2021"
-description = "Provides a set of test cases for supervisors to verify functions of the supervisor executation environment"
+description = "Provide a set of test cases for supervisors to verify functions of the supervisor executation environment"
 categories = ["os", "no-std"]
 keywords = ["riscv", "sbi", "rustsbi"]
 authors = ["YdrMaster <ydrml@hotmail.com>"]

@@ -1,25 +1,47 @@
+//! RISC-V SBI Base extension test suite
+
 use sbi::{ExtensionInfo, Version};
 use sbi_spec::base::impl_id;
 
+/// Base extension test cases
+#[derive(Clone, Debug)]
 pub enum Case {
+    /// Can't procceed test for base extension does not exist
     NotExist,
+    /// Test begin
     Begin,
-    Pass,
+    /// Test process for getting SBI specification version
     GetSbiSpecVersion(Version),
+    /// Test process for getting SBI implementation ID
     GetSbiImplId(Result<&'static str, usize>),
+    /// Test process for getting version of SBI implementation
     GetSbiImplVersion(usize),
+    /// Test process for probe standard SBI extensions
     ProbeExtensions(Extensions),
+    /// Test process for getting vendor ID from RISC-V environment
     GetMVendorId(usize),
+    /// Test process for getting architecture ID from RISC-V environment
     GetMArchId(usize),
+    /// Test process for getting implementation ID from RISC-V environment
     GetMimpId(usize),
+    /// All test cases on base module finished
+    Pass,
 }
 
+/// Information about all SBI standard extensions
+#[derive(Clone, Debug)]
 pub struct Extensions {
+    /// Timer programmer extension
     pub time: ExtensionInfo,
+    /// Inter-processor Interrupt extension
     pub spi: ExtensionInfo,
+    /// Remote Fence extension
     pub rfnc: ExtensionInfo,
+    /// Hart State Monitor extension
     pub hsm: ExtensionInfo,
+    /// System Reset extension
     pub srst: ExtensionInfo,
+    /// Performance Monitor Unit extension
     pub pmu: ExtensionInfo,
 }
 
@@ -48,6 +70,7 @@ impl core::fmt::Display for Extensions {
     }
 }
 
+/// Test base extension with test case output to be handled in `f`.
 pub fn test(mut f: impl FnMut(Case)) {
     if sbi::probe_extension(sbi::Base).is_unavailable() {
         f(Case::NotExist);

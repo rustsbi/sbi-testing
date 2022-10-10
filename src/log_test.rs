@@ -1,16 +1,22 @@
 ﻿use crate::{base, hsm, spi, time};
 use log_crate::*;
 
+/// Automatic SBI testing with logging enabled
 pub struct Testing {
+    /// The hart ID to test most of single core extensions
     pub hartid: usize,
+    /// A list of harts to test Hart State Monitor extension
     pub hart_mask: usize,
+    /// Base of hart list to test Hart State Monitor extension
     pub hart_mask_base: usize,
+    /// Delay value to test Timer programmer extension
     pub delay: u64,
 }
 
 const TARGET: &str = "sbi-testing";
 
 impl Testing {
+    /// Start testing process of RISC-V SBI implementation
     pub fn test(self) -> bool {
         let mut result = true;
         base::test(|case| {

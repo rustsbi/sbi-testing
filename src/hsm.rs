@@ -1,23 +1,50 @@
+//! Hart State Monitor extension test suite
+
 use core::sync::atomic::{AtomicU32, Ordering};
 use sbi::SbiRet;
 use sbi_spec::hsm::{HART_STATE_STARTED, HART_STATE_STOPPED, HART_STATE_SUSPENDED};
 
+/// Hart State Monitor extension test cases
+#[derive(Clone, Debug)]
 pub enum Case<'a> {
+    /// Can't procceed test for Hart State Monitor extension does not exist
     NotExist,
+    /// Test begin
     Begin,
+    /// Test failed for hart started before test begin
+    ///
+    /// The returned value includes which hart led to this test failure
     HartStartedBeforeTest(usize),
+    /// Test failed for no other harts are available to be tested
     NoStoppedHart,
+    /// Test process for begin test hart state monitor on one batch
     BatchBegin(&'a [usize]),
+    /// Test process for target hart to be tested has started
     HartStarted(usize),
-    HartStartFailed { hartid: usize, ret: SbiRet },
+    /// Test failed for can't start target hart with `SbiRet` error
+    HartStartFailed {
+        /// The target hart ID that has failed to start
+        hartid: usize,
+        /// The `SbiRet` value for the failed hart start SBI call
+        ret: SbiRet,
+    },
+    /// Test process for target hart to be tested has non-retentively suspended
     HartSuspendedNonretentive(usize),
+    /// Test process for target hart to be tested has resumed
     HartResumed(usize),
+    /// Test process for target hart to be tested has retentively suspended
     HartSuspendedRetentive(usize),
+    /// Test process for target hart to be tested has stopped
     HartStopped(usize),
+    /// Test process for harts on current batch has passed the tests
     BatchPass(&'a [usize]),
+    /// All test cases on hart state monitor module finished
     Pass,
 }
 
+/// Test hart state monitor extension on given harts.
+///
+/// The test case output is to be handled in `f`.
 pub fn test(
     primary_hart_id: usize,
     mut hart_mask: usize,

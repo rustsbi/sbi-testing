@@ -1,17 +1,40 @@
-﻿use crate::thread::Thread;
+//! Timer programmer extension test suite
+
+use crate::thread::Thread;
 use riscv::register::scause::{self, Trap};
 
+/// Timer programmer extension test cases
+#[derive(Clone, Debug)]
 pub enum Case {
+    /// Can't procceed test for Timer extension does not exist
     NotExist,
+    /// Test begin
     Begin,
-    Interval { begin: u64, end: u64 },
+    /// Test process for time interval overhead between two reads
+    Interval {
+        /// The time counter value for the first read
+        begin: u64,
+        /// The time counter value for the second read
+        end: u64,
+    },
+    /// Test failed for can't read `time` register
     ReadFailed,
-    TimeDecreased { a: u64, b: u64 },
+    /// Test failed for time counter has decreased during period of two reads
+    TimeDecreased {
+        /// The time counter value for the first read
+        a: u64,
+        /// The time counter value for the second read
+        b: u64,
+    },
+    /// Test process for timer has been set
     SetTimer,
+    /// Test failed for unexpected trap during timer test
     UnexpectedTrap(Trap),
+    /// All test cases on timer extension has passed
     Pass,
 }
 
+/// Test timer extension
 pub fn test(delay: u64, mut f: impl FnMut(Case)) {
     use riscv::register::{scause::Interrupt, sie, time};
 
