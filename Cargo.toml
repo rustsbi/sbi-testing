@@ -13,6 +13,12 @@ readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+default-target = "riscv64imac-unknown-none-elf"
+targets = [
+    "riscv32imac-unknown-none-elf", "riscv64imac-unknown-none-elf",
+]
+
 [dependencies]
 sbi-rt = "0.0.2"
 sbi-spec = "0.0.4"
