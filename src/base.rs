@@ -70,7 +70,9 @@ impl core::fmt::Display for Extensions {
     }
 }
 
-/// Test base extension with test case output to be handled in `f`.
+/// Test base extension.
+///
+/// The test case output would be handled in `f`.
 pub fn test(mut f: impl FnMut(Case)) {
     if sbi::probe_extension(sbi::Base).is_unavailable() {
         f(Case::NotExist);

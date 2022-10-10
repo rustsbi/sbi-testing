@@ -34,7 +34,7 @@ pub enum Case {
     Pass,
 }
 
-/// Test timer extension
+/// Test timer extension.
 pub fn test(delay: u64, mut f: impl FnMut(Case)) {
     use riscv::register::{scause::Interrupt, sie, time};
 

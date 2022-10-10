@@ -18,15 +18,19 @@ mod log_test;
 pub use log_test::Testing;
 
 // §4
-pub mod base;
+mod base;
+pub use base::{test as test_base, Case as BaseCase, Extensions};
 // §6
-pub mod time;
+mod time;
+pub use time::{test as test_timer, Case as TimerCase};
 // §7
-pub mod spi;
+mod spi;
+pub use spi::{test as test_ipi, Case as IpiCase};
 // §8
 // pub mod rfnc;
 // §9
-pub mod hsm;
+mod hsm;
+pub use hsm::{test as test_hsm, Case as HsmCase};
 // §10
 // pub mod srst;
 // §11

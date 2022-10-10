@@ -22,7 +22,7 @@ pub enum Case {
     Pass,
 }
 
-/// Test inter-processpr interrupt extension.
+/// Test inter-processor interrupt extension.
 pub fn test(hart_id: usize, mut f: impl FnMut(Case)) {
     if sbi::probe_extension(sbi::Timer).is_unavailable() {
         f(Case::NotExist);
