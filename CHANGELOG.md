@@ -13,6 +13,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.0.2] - 2023-01-20
+
+### Modified
+
+- Update dependency crate `riscv` to version 0.10.1
+
 ## [0.0.1] - 2022-10-10
 
 ### Modified
@@ -20,6 +26,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Project structure to keep test functions at root module
 - Use `sbi-rt` v0.0.2 and `sbi-spec` v0.0.4
 
-[Unreleased]: https://github.com/rustsbi/sbi-testing/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/rustsbi/sbi-testing/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/rustsbi/sbi-testing/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/rustsbi/sbi-testing/compare/v0.0.0...v0.0.1
-[0.0.0]: https://github.com/rustsbi/sbi-testing/releases/tag/v0.0.0

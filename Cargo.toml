@@ -1,6 +1,6 @@
 [package]
 name = "sbi-testing"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Provide a set of test cases for supervisors to verify functions of the supervisor executation environment"
 categories = ["os", "no-std"]
@@ -15,14 +15,12 @@ readme = "README.md"
 
 [package.metadata.docs.rs]
 default-target = "riscv64imac-unknown-none-elf"
-targets = [
-    "riscv32imac-unknown-none-elf", "riscv64imac-unknown-none-elf",
-]
+targets = ["riscv32imac-unknown-none-elf", "riscv64imac-unknown-none-elf"]
 
 [dependencies]
 sbi-rt = "0.0.2"
 sbi-spec = "0.0.4"
-riscv = "0.9.0"
+riscv = "0.10.1"
 log_crate = { version = "0.4.17", package = "log", optional = true }
 
 [features]
