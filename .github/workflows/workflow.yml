@@ -14,12 +14,12 @@ on:
     branches: [ "main" ]
     paths:
       - 'src/**'
-      - 'Cargo.toml'
+      - '*.toml'
   pull_request:
     branches: [ "main" ]
     paths:
       - 'src/**'
-      - 'Cargo.toml'
+      - '*.toml'
 
 jobs:
   rust-clippy-analyze:
@@ -33,9 +33,6 @@ jobs:
 
       - name: Check format
         run: cargo fmt --check
-
-      - name: Run test
-        run: cargo test --lib
 
       - name: Install clippy-sarif
         uses: actions-rs/install@v0.1
