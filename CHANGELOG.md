@@ -18,6 +18,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Modified
 
 - Update dependency crate `riscv` to version 0.10.1
+- Remove feature declaration `asm_sym`, bump MSRV to 1.66.0
 
 ## [0.0.1] - 2022-10-10
 

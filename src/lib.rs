@@ -1,8 +1,8 @@
 //! RISC-V Supervisor Binary Interface test suite
 
 #![no_std]
-#![deny(missing_docs)]
-#![feature(naked_functions, asm_sym, asm_const)]
+#![deny(warnings, missing_docs)]
+#![feature(naked_functions, asm_const)]
 
 mod thread;
 
