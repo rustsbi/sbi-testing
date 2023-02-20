@@ -1,4 +1,4 @@
-﻿//! Inter-processor Interrupt extension test suite
+﻿//! Inter-processor interrupt extension test suite.
 
 use crate::thread::Thread;
 use riscv::register::{
@@ -7,18 +7,18 @@ use riscv::register::{
     sie,
 };
 
-/// Inter-processor Interrupt extension test cases
+/// Inter-processor Interrupt extension test cases.
 #[derive(Clone, Debug)]
 pub enum Case {
-    /// Can't procceed test for Inter-processor Interrupt extension does not exist
+    /// Can't procceed test for inter-processor interrupt extension does not exist.
     NotExist,
-    /// Test begin
+    /// Test begin.
     Begin,
-    /// Test process for an inter-processor interrupt has been received
+    /// Test process for an inter-processor interrupt has been received.
     SendIpi,
-    /// Test failed for unexpected trap occurred upon tests
+    /// Test failed for unexpected trap occurred upon tests.
     UnexpectedTrap(Trap),
-    /// All test cases on inter-processor interrupt extension has passed
+    /// All test cases on inter-processor interrupt extension has passed.
     Pass,
 }
 

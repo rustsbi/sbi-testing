@@ -1,44 +1,44 @@
-//! Hart State Monitor extension test suite
+//! Hart state monitor extension test suite.
 
 use core::sync::atomic::{AtomicU32, Ordering};
 use sbi::SbiRet;
 use sbi_spec::hsm::{HART_STATE_STARTED, HART_STATE_STOPPED, HART_STATE_SUSPENDED};
 
-/// Hart State Monitor extension test cases
+/// Hart state monitor extension test cases.
 #[derive(Clone, Debug)]
 pub enum Case<'a> {
-    /// Can't procceed test for Hart State Monitor extension does not exist
+    /// Can't procceed test for Hart state monitor extension does not exist.
     NotExist,
     /// Test begin
     Begin,
-    /// Test failed for hart started before test begin
+    /// Test failed for hart started before test begin.
     ///
-    /// The returned value includes which hart led to this test failure
+    /// The returned value includes which hart led to this test failure.
     HartStartedBeforeTest(usize),
-    /// Test failed for no other harts are available to be tested
+    /// Test failed for no other harts are available to be tested.
     NoStoppedHart,
-    /// Test process for begin test hart state monitor on one batch
+    /// Test process for begin test hart state monitor on one batch.
     BatchBegin(&'a [usize]),
-    /// Test process for target hart to be tested has started
+    /// Test process for target hart to be tested has started.
     HartStarted(usize),
-    /// Test failed for can't start target hart with `SbiRet` error
+    /// Test failed for can't start target hart with [`SbiRet`] error.
     HartStartFailed {
-        /// The target hart ID that has failed to start
+        /// The target hart ID that has failed to start.
         hartid: usize,
-        /// The `SbiRet` value for the failed hart start SBI call
+        /// The `SbiRet` value for the failed hart start SBI call.
         ret: SbiRet,
     },
-    /// Test process for target hart to be tested has non-retentively suspended
+    /// Test process for target hart to be tested has non-retentively suspended.
     HartSuspendedNonretentive(usize),
-    /// Test process for target hart to be tested has resumed
+    /// Test process for target hart to be tested has resumed.
     HartResumed(usize),
-    /// Test process for target hart to be tested has retentively suspended
+    /// Test process for target hart to be tested has retentively suspended.
     HartSuspendedRetentive(usize),
-    /// Test process for target hart to be tested has stopped
+    /// Test process for target hart to be tested has stopped.
     HartStopped(usize),
-    /// Test process for harts on current batch has passed the tests
+    /// Test process for harts on current batch has passed the tests.
     BatchPass(&'a [usize]),
-    /// All test cases on hart state monitor module finished
+    /// All test cases on hart state monitor module finished.
     Pass,
 }
 

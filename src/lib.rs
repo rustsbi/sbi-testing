@@ -35,3 +35,6 @@ pub use hsm::{test as test_hsm, Case as HsmCase};
 // pub mod srst;
 // §11
 // pub mod pmu;
+// §12
+mod dbcn;
+pub use dbcn::{test as test_dbcn, Case as DbcnCase};

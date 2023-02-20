@@ -1,36 +1,36 @@
-//! Timer programmer extension test suite
+//! Timer programmer extension test suite.
 
 use crate::thread::Thread;
 use riscv::register::scause::{self, Trap};
 
-/// Timer programmer extension test cases
+/// Timer programmer extension test cases.
 #[derive(Clone, Debug)]
 pub enum Case {
-    /// Can't procceed test for Timer extension does not exist
+    /// Can't procceed test for Timer extension does not exist.
     NotExist,
-    /// Test begin
+    /// Test begin.
     Begin,
-    /// Test process for time interval overhead between two reads
+    /// Test process for time interval overhead between two reads.
     Interval {
-        /// The time counter value for the first read
+        /// The time counter value for the first read.
         begin: u64,
-        /// The time counter value for the second read
+        /// The time counter value for the second read.
         end: u64,
     },
-    /// Test failed for can't read `time` register
+    /// Test failed for can't read `time` register.
     ReadFailed,
-    /// Test failed for time counter has decreased during period of two reads
+    /// Test failed for time counter has decreased during period of two reads.
     TimeDecreased {
-        /// The time counter value for the first read
+        /// The time counter value for the first read.
         a: u64,
-        /// The time counter value for the second read
+        /// The time counter value for the second read.
         b: u64,
     },
-    /// Test process for timer has been set
+    /// Test process for timer has been set.
     SetTimer,
-    /// Test failed for unexpected trap during timer test
+    /// Test failed for unexpected trap during timer test.
     UnexpectedTrap(Trap),
-    /// All test cases on timer extension has passed
+    /// All test cases on timer extension has passed.
     Pass,
 }
 
