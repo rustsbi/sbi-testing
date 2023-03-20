@@ -42,7 +42,7 @@ pub fn test(mut f: impl FnMut(Case)) {
     } else {
         f(Case::WritingByteFailed(ret));
     }
-    let words = b"ello, world!";
+    let words = b"ello, world!\r\n";
     let ret = unsafe { sbi::console_write(words.len(), words.as_ptr() as _, 0) };
     if let Some(len) = ret.ok() {
         f(if len == words.len() {
