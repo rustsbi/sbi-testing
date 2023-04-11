@@ -1,6 +1,7 @@
 ﻿//! Debug console extension test suite.
 
 use sbi::SbiRet;
+use sbi_spec::binary::Physical;
 
 /// Debug console extension test cases.
 #[derive(Clone, Debug)]
@@ -43,7 +44,7 @@ pub fn test(mut f: impl FnMut(Case)) {
         f(Case::WritingByteFailed(ret));
     }
     let words = b"ello, world!\r\n";
-    let ret = unsafe { sbi::console_write(words.len(), words.as_ptr() as _, 0) };
+    let ret = sbi::console_write(Physical::new(words.len(), words.as_ptr() as _, 0));
     if let Some(len) = ret.ok() {
         f(if len == words.len() {
             Case::WriteSlice
@@ -54,7 +55,7 @@ pub fn test(mut f: impl FnMut(Case)) {
         f(Case::WritingSliceFailed(ret));
     }
     let mut buffer = [0u8; 16];
-    let ret = unsafe { sbi::console_read(buffer.len(), buffer.as_mut_ptr() as _, 0) };
+    let ret = sbi::console_read(Physical::new(buffer.len(), buffer.as_mut_ptr() as _, 0));
     if let Some(len) = ret.ok() {
         f(Case::Read(len));
     } else {

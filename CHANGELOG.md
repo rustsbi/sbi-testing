@@ -9,7 +9,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Test new extension DBCN
+
 ### Modified
+
+- Update sbi-spec to version 0.0.6
+- Update sbi-rt to version 0.0.3
 
 ### Fixed
 
