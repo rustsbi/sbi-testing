@@ -2,7 +2,7 @@
 
 use core::sync::atomic::{AtomicU32, Ordering};
 use sbi::SbiRet;
-use sbi_spec::hsm::{HART_STATE_STARTED, HART_STATE_STOPPED, HART_STATE_SUSPENDED};
+use sbi_spec::hsm::hart_state;
 
 /// Hart state monitor extension test cases.
 #[derive(Clone, Debug)]
@@ -104,9 +104,9 @@ pub fn test(
     }
 }
 
-const STARTED: SbiRet = SbiRet::success(HART_STATE_STARTED);
-const STOPPED: SbiRet = SbiRet::success(HART_STATE_STOPPED);
-const SUSPENDED: SbiRet = SbiRet::success(HART_STATE_SUSPENDED);
+const STARTED: SbiRet = SbiRet::success(hart_state::STARTED);
+const STOPPED: SbiRet = SbiRet::success(hart_state::STOPPED);
+const SUSPENDED: SbiRet = SbiRet::success(hart_state::SUSPENDED);
 
 const TEST_BATCH_SIZE: usize = 4;
 static mut STACK: [ItemPerHart; TEST_BATCH_SIZE] = [ItemPerHart::ZERO; TEST_BATCH_SIZE];
@@ -202,7 +202,7 @@ fn test_batch(batch: &[usize], mut f: impl FnMut(Case)) -> bool {
     for hartid in &batch[1..] {
         mask |= 1 << (hartid - batch[0]);
     }
-    sbi::send_ipi(mask, batch[0]);
+    sbi::send_ipi(sbi_spec::binary::HartMask::from_mask_base(mask, batch[0]));
     // 测试可恢复休眠
     for (i, hartid) in batch.iter().copied().enumerate() {
         let item = unsafe { &mut STACK[i] };
@@ -221,7 +221,7 @@ fn test_batch(batch: &[usize], mut f: impl FnMut(Case)) -> bool {
         }
         f(Case::HartSuspendedRetentive(hartid));
         // 单独恢复
-        sbi::send_ipi(1, hartid);
+        sbi::send_ipi(sbi_spec::binary::HartMask::from_mask_base(1, hartid));
         // 等待关闭
         while sbi::hart_get_status(hartid) != STOPPED {
             core::hint::spin_loop();

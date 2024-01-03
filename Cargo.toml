@@ -1,6 +1,6 @@
 [package]
 name = "sbi-testing"
-version = "0.0.2"
+version = "0.0.3-rc.0"
 edition = "2021"
 description = "Provide a set of test cases for supervisors to verify functions of the supervisor executation environment"
 categories = ["os", "no-std"]
@@ -18,10 +18,10 @@ default-target = "riscv64imac-unknown-none-elf"
 targets = ["riscv32imac-unknown-none-elf", "riscv64imac-unknown-none-elf"]
 
 [dependencies]
-sbi-rt = "0.0.3-rc.2"
-sbi-spec = "0.0.6"
+sbi-rt = "0.0.3-rc.5"
+sbi-spec = "0.0.7-alpha.3"
 riscv = "0.10.1"
-log_crate = { version = "0.4.17", package = "log", optional = true }
+log_crate = { version = "0.4", package = "log", optional = true }
 
 [features]
 log = ["log_crate"]
